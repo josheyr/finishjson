@@ -78,11 +78,9 @@ func FinishJSON(unfinished string) string {
 		}
 	}
 
-	unfinished = strings.TrimSpace(unfinished)
-
 	// If we are still expecting a value, append "null" to the result
 	if expectingValue {
-		sb.WriteString(" null")
+		sb.WriteString("null")
 	}
 
 	// Complete the unmatched characters
