@@ -5,33 +5,31 @@ import (
 	"unicode"
 )
 
+func pop(stack []rune) []rune {
+	if len(stack) > 0 {
+		return stack[:len(stack)-1]
+	}
+	return stack
+}
+
+func reverse(runes []rune) []rune {
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return runes
+}
+
 func FinishJSON(unfinished string) string {
 	if len(unfinished) == 0 {
 		return "{}"
 	}
 
-	// Dedicated stack functions for clarity
-	push := func(stack []rune, value rune) []rune {
-		return append(stack, value)
-	}
-
-	pop := func(stack []rune) []rune {
-		if len(stack) > 0 {
-			return stack[:len(stack)-1]
-		}
-		return stack
-	}
-
-	reverse := func(runes []rune) []rune {
-		for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-			runes[i], runes[j] = runes[j], runes[i]
-		}
-		return runes
-	}
-
 	// Initialize necessary variables
 	var expectedStack []rune
 	inString, escaping, expectingValue := false, false, false
+
+	var sb strings.Builder
+	sb.WriteString(unfinished)
 
 	// Iterate over the input string
 	for _, char := range unfinished {
@@ -51,10 +49,10 @@ func FinishJSON(unfinished string) string {
 
 			switch char {
 			case '{':
-				expectedStack = push(expectedStack, '}')
+				expectedStack = append(expectedStack, '}')
 				expectingValue = false
 			case '[':
-				expectedStack = push(expectedStack, ']')
+				expectedStack = append(expectedStack, ']')
 				expectingValue = true
 			case 't':
 				expectedStack = append(expectedStack, 'e', 'u', 'r')
@@ -69,7 +67,7 @@ func FinishJSON(unfinished string) string {
 				expectingValue = true
 			case '"':
 				inString = true
-				expectedStack = push(expectedStack, '"')
+				expectedStack = append(expectedStack, '"')
 				expectingValue = false
 			default:
 				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] == char {
@@ -84,13 +82,13 @@ func FinishJSON(unfinished string) string {
 
 	// If we are still expecting a value, append "null" to the result
 	if expectingValue {
-		unfinished += " null"
+		sb.WriteString(" null")
 	}
 
 	// Complete the unmatched characters
 	if len(expectedStack) > 0 {
-		unfinished += string(reverse(expectedStack))
+		sb.WriteString(string(reverse(expectedStack)))
 	}
 
-	return unfinished
+	return sb.String()
 }
