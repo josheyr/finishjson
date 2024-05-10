@@ -33,7 +33,8 @@ func FinishJSON(unfinished string) string {
 
 	// Iterate over the input string
 	for _, char := range unfinished {
-		if inString {
+		switch {
+		case inString:
 			if escaping {
 				escaping = false
 			} else if char == '\\' {
@@ -42,11 +43,11 @@ func FinishJSON(unfinished string) string {
 				inString = false
 				expectedStack = pop(expectedStack)
 			}
-		} else {
-			if unicode.IsSpace(char) {
-				continue
-			}
 
+		case unicode.IsSpace(char):
+			continue
+
+		default:
 			switch char {
 			case '{':
 				expectedStack = append(expectedStack, '}')
@@ -64,28 +65,19 @@ func FinishJSON(unfinished string) string {
 				expectedStack = append(expectedStack, 'l', 'l', 'u')
 				expectingValue = false
 			case ',':
-				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] != ']' {
-					expectingValue = false
-				} else {
-					expectingValue = true
-				}
+				expectingValue = len(expectedStack) <= 0 || expectedStack[len(expectedStack)-1] == ']'
 			case '"':
 				inString = true
 				if !expectingValue {
 					expectedStack = append(expectedStack, ':')
 				}
 				expectedStack = append(expectedStack, '"')
-
 				expectingValue = false
 			default:
 				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] == char {
 					expectedStack = pop(expectedStack)
 				}
-				expectingValue = false
-
-				if char == ':' {
-					expectingValue = true
-				}
+				expectingValue = char == ':'
 			}
 		}
 	}
