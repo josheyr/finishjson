@@ -16,7 +16,7 @@ func TestFinishJson(t *testing.T) {
 		{
 			name:           "Truncated JSON at the end",
 			unfinishedJson: `{"key": "value", "key2":`,
-			expected:       `{"key": "value", "key2": null}`, // Adjust based on the function's expected behavior
+			expected:       `{"key": "value", "key2":null}`, // Adjust based on the function's expected behavior
 		},
 		{
 			name:           "Truncated true value",
@@ -79,13 +79,33 @@ func TestFinishJson(t *testing.T) {
 			unfinishedJson: `{"key": "\`,
 			expected:       `{"key": "\\"}`, // Handle missing key gracefully if relevant
 		},
+		{
+			name:           "No colon",
+			unfinishedJson: `{"key`,
+			expected:       `{"key":null}`, // Handle missing key gracefully if relevant
+		},
+		{
+			name:           "No colon multiple",
+			unfinishedJson: `{"key":1, "key2`,
+			expected:       `{"key":1, "key2":null}`, // Handle missing key gracefully if relevant
+		},
+		{
+			name:           "Truncated JSON with nested objects no colon",
+			unfinishedJson: `{"outer": {"inner1": "value1", "inner2": "value2", "inner3`,
+			expected:       `{"outer": {"inner1": "value1", "inner2": "value2", "inner3":null}}`, // Modify as per your expected behavior
+		},
+		{
+			name:           "End in colon",
+			unfinishedJson: `{"key":`,
+			expected:       `{"key":null}`, // Handle missing key gracefully if relevant
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := FinishJSON(test.unfinishedJson)
 			if result != test.expected {
-				t.Errorf("Got %q, expected %q", result, test.expected)
+				t.Errorf("Input: %q Output: Got %q, expected %q", test.unfinishedJson, result, test.expected)
 			}
 		})
 	}

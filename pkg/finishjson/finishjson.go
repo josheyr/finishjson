@@ -63,17 +63,29 @@ func FinishJSON(unfinished string) string {
 			case 'n':
 				expectedStack = append(expectedStack, 'l', 'l', 'u')
 				expectingValue = false
-			case ':', ',':
-				expectingValue = true
+			case ',':
+				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] != ']' {
+					expectingValue = false
+				} else {
+					expectingValue = true
+				}
 			case '"':
 				inString = true
+				if !expectingValue {
+					expectedStack = append(expectedStack, ':')
+				}
 				expectedStack = append(expectedStack, '"')
+
 				expectingValue = false
 			default:
 				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] == char {
 					expectedStack = pop(expectedStack)
 				}
 				expectingValue = false
+
+				if char == ':' {
+					expectingValue = true
+				}
 			}
 		}
 	}
@@ -89,7 +101,8 @@ func FinishJSON(unfinished string) string {
 
 	// Complete the unmatched characters
 	if len(expectedStack) > 0 {
-		sb.WriteString(string(reverse(expectedStack)))
+		sb.WriteString(
+			strings.ReplaceAll(string(reverse(expectedStack)), ":", ":null"))
 	}
 
 	return sb.String()
