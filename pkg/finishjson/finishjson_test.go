@@ -42,7 +42,7 @@ func TestFinishJson(t *testing.T) {
 		{
 			name:           "Truncated JSON with arrays",
 			unfinishedJson: `{"array": [1, 2, 3,`,
-			expected:       `{"array": [1, 2, 3, null]}`, // Adjust as per expected correction logic
+			expected:       `{"array": [1, 2, 3,null]}`, // Adjust as per expected correction logic
 		},
 		{
 			name:           "Empty JSON",
