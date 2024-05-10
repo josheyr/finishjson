@@ -74,6 +74,11 @@ func TestFinishJson(t *testing.T) {
 			unfinishedJson: `{"": "value"`,
 			expected:       `{"": "value"}`, // Handle missing key gracefully if relevant
 		},
+		{
+			name:           "End escaped",
+			unfinishedJson: `{"key": "\`,
+			expected:       `{"key": "\\"}`, // Handle missing key gracefully if relevant
+		},
 	}
 
 	for _, test := range tests {

@@ -78,6 +78,10 @@ func FinishJSON(unfinished string) string {
 		}
 	}
 
+	if escaping {
+		sb.WriteString("\\")
+	}
+
 	// If we are still expecting a value, append "null" to the result
 	if expectingValue {
 		sb.WriteString("null")
