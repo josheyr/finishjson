@@ -1,6 +1,8 @@
 package finishjson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestFinishJson(t *testing.T) {
 	tests := []struct {
@@ -42,7 +44,7 @@ func TestFinishJson(t *testing.T) {
 		{
 			name:           "Truncated JSON with arrays",
 			unfinishedJson: `{"array": [1, 2, 3,`,
-			expected:       `{"array": [1, 2, 3,null]}`, // Adjust as per expected correction logic
+			expected:       `{"array": [1, 2, 3]}`, // Adjust as per expected correction logic
 		},
 		{
 			name:           "Empty JSON",
@@ -62,7 +64,7 @@ func TestFinishJson(t *testing.T) {
 		{
 			name:           "Truncated array element",
 			unfinishedJson: `{"array": [1, 2, `,
-			expected:       `{"array": [1, 2, null]}`, // Example of expected behavior for an unfinished array element
+			expected:       `{"array": [1, 2]}`, // Example of expected behavior for an unfinished array element
 		},
 		{
 			name:           "Incomplete Unicode escape sequence",
@@ -89,6 +91,17 @@ func TestFinishJson(t *testing.T) {
 			unfinishedJson: `{"key":1, "key2`,
 			expected:       `{"key":1, "key2":null}`, // Handle missing key gracefully if relevant
 		},
+		{
+			name:           "No colon multiple with comma",
+			unfinishedJson: `{"poo":[{"key":1, "key2":null},{"key":1, "key2":"gfdsg",`,
+			expected:       `{"poo":[{"key":1, "key2":null},{"key":1, "key2":"gfdsg"}]}`, // Handle missing key gracefully if relevant
+		},
+		{
+			name:           "No colon multiple with comma",
+			unfinishedJson: `{"poo":[{"key":1, "key2":null},{"key":1, "key2":"gfdsg",`,
+			expected:       `{"poo":[{"key":1, "key2":null},{"key":1, "key2":"gfdsg"}]}`, // Handle missing key gracefully if relevant
+		},
+
 		{
 			name:           "Truncated JSON with nested objects no colon",
 			unfinishedJson: `{"outer": {"inner1": "value1", "inner2": "value2", "inner3`,

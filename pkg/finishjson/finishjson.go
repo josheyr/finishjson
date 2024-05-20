@@ -24,24 +24,35 @@ func FinishJSON(unfinished string) string {
 		return "{}"
 	}
 
-	// Initialize necessary variables
-	var expectedStack []rune
-	inString, escaping, expectingValue := false, false, false
+	var (
+		expectedStack  []rune
+		inString       bool
+		escaping       bool
+		expectingValue bool
+		lastComma      bool
+		sb             strings.Builder
+	)
 
-	var sb strings.Builder
 	sb.WriteString(unfinished)
 
-	// Iterate over the input string
 	for _, char := range unfinished {
 		switch {
 		case inString:
-			if escaping {
+			switch char {
+			case '\\':
+				if escaping {
+					escaping = false
+				} else {
+					escaping = true
+				}
+			case '"':
+				if !escaping {
+					inString = false
+					expectedStack = pop(expectedStack)
+				}
 				escaping = false
-			} else if char == '\\' {
-				escaping = true
-			} else if char == '"' {
-				inString = false
-				expectedStack = pop(expectedStack)
+			default:
+				escaping = false
 			}
 
 		case unicode.IsSpace(char):
@@ -52,20 +63,32 @@ func FinishJSON(unfinished string) string {
 			case '{':
 				expectedStack = append(expectedStack, '}')
 				expectingValue = false
+				lastComma = false
+
 			case '[':
 				expectedStack = append(expectedStack, ']')
 				expectingValue = true
+				lastComma = false
+
 			case 't':
 				expectedStack = append(expectedStack, 'e', 'u', 'r')
 				expectingValue = false
+				lastComma = false
+
 			case 'f':
 				expectedStack = append(expectedStack, 'e', 's', 'l', 'a')
 				expectingValue = false
+				lastComma = false
+
 			case 'n':
 				expectedStack = append(expectedStack, 'l', 'l', 'u')
 				expectingValue = false
+				lastComma = false
+
 			case ',':
-				expectingValue = len(expectedStack) <= 0 || expectedStack[len(expectedStack)-1] == ']'
+				expectingValue = len(expectedStack) == 0 || expectedStack[len(expectedStack)-1] == ']'
+				lastComma = true
+
 			case '"':
 				inString = true
 				if !expectingValue {
@@ -73,7 +96,9 @@ func FinishJSON(unfinished string) string {
 				}
 				expectedStack = append(expectedStack, '"')
 				expectingValue = false
+
 			default:
+				lastComma = false
 				if len(expectedStack) > 0 && expectedStack[len(expectedStack)-1] == char {
 					expectedStack = pop(expectedStack)
 				}
@@ -86,15 +111,18 @@ func FinishJSON(unfinished string) string {
 		sb.WriteString("\\")
 	}
 
-	// If we are still expecting a value, append "null" to the result
-	if expectingValue {
+	if expectingValue && !lastComma {
 		sb.WriteString("null")
 	}
 
-	// Complete the unmatched characters
+	if lastComma {
+		truncated := strings.TrimSuffix(strings.TrimSpace(sb.String()), ",")
+		sb.Reset()
+		sb.WriteString(truncated)
+	}
+
 	if len(expectedStack) > 0 {
-		sb.WriteString(
-			strings.ReplaceAll(string(reverse(expectedStack)), ":", ":null"))
+		sb.WriteString(strings.ReplaceAll(string(reverse(expectedStack)), ":", ":null"))
 	}
 
 	return sb.String()
